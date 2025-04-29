@@ -176,7 +176,6 @@
         📅 {{ frase_fecha }}
     </p>
     
-
     </div>
 
     {% for sector in sectores %}
@@ -246,7 +245,6 @@
 ">
     ➕ Asignar
 </button>
-
                         <div class="panel" id="asignar-{{ sector }}-{{ box }}">
                             <form method="post">
                                 <input type="hidden" name="sector" value="{{ sector }}">
@@ -274,14 +272,11 @@
                                 <input type="submit" value="Asignar">
                             </form>
                         </div>
-
                     </div>
-
                 </div>
                 {% endfor %}
             </div>
         </div>
     {% endfor %}
-
 </body>
 </html>

@@ -165,7 +165,6 @@ def index():
         frase_fecha=frase_fecha,  # 👈 nuevo dato para mostrar en index.html
     )
 
-
 @app.route("/liberar", methods=["POST"])
 def liberar_box():
     """Libera un box eliminando la asignación de un profesional en el horario seleccionado y redirige a la página principal."""
