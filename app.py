@@ -88,6 +88,7 @@ def index():
 
         # 🔹 Eliminar asignaciones anteriores en ese rango
         for h in horarios_disponibles:
+             print(f"Liberando: sector={sector}, dia={dia}, box={box}, horario={h}")
             supabase.table("asignaciones").delete().match({
                 "sector": sector,
                 "dia": dia,
