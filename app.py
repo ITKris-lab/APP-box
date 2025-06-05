@@ -21,8 +21,7 @@ profesionales_por_sector = {
         "Dr. Carlos Molina M.", "Dra Carola Arce", "Dr. Ignacio Valdez", "Dr. Efrén Gutierrez", "Dra. Isabel Chirino",
         "Dra. Karla Grudski", "Dra. Sofia", "Dra. Giacarla Gambi", "Dr. Juan Hernández", "Dra. Scarlette Garcia",
         "Dr. Diego Vallegos", "Dr. Andrés Barra", "Dr. Joaquín Alvarado", "Dr. Omar Pereira", "Dr. Oliver Puentes",
-        "Dra. Mirtha Olivares", "Dr. Benjamín Arancibia", "Dr. Leonardo Delgado", "Dr. Javier Arias", "Dra.Amy Acosta",
-        "Ocupado"
+        "Dra. Mirtha Olivares", "Dr. Benjamín Arancibia", "Dr. Leonardo Delgado", "Dr. Javier Arias", "Dra. Amy Acosta", "Ocupado"
     ] for sector in sectores
 }
 
