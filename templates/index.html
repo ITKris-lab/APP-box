@@ -123,9 +123,62 @@
             box-sizing: border-box;
         }
 
+        /* Estilos para el calendario */
+        .calendario {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            margin: 1rem auto;
+            max-width: 800px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .calendario-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .calendario-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.5rem;
+        }
+
+        .calendario-dia {
+            text-align: center;
+            padding: 0.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .calendario-dia:hover {
+            background-color: #e5e7eb;
+        }
+
+        .calendario-dia.actual {
+            background-color: #2563eb;
+            color: white;
+        }
+
+        .calendario-dia.vacio {
+            visibility: hidden;
+        }
+
+        .calendario-dia-nombre {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #4b5563;
+        }
+
         @media (max-width: 768px) {
             .box-tarjeta {
                 width: 90%;
+            }
+            .calendario {
+                margin: 1rem;
             }
         }
     </style>
@@ -135,47 +188,44 @@
             const panel = document.getElementById(id);
             panel.style.display = panel.style.display === "flex" ? "none" : "flex";
         }
+
+        function seleccionarFecha(fecha) {
+            window.location.href = `/?fecha=${fecha}`;
+        }
     </script>
 </head>
 
 <body>
-
     <h1>Gestión de Boxes - {{ mes_actual }} {{ año_actual }}</h1>
 
-    <div class="selector-dia">
-        <form method="get">
-            <label for="dia">Seleccionar día:</label>
-            <select name="dia" id="dia" onchange="this.form.submit()" style="
-            padding: 0.5rem 1rem;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 500;
-            color: #374151;
-            background-color: #f9fafb;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-            transition: border-color 0.3s ease;
-        ">
-            {% for dia in dias_semana %}
-                <option value="{{ dia }}" {% if dia == dia_seleccionado %}selected{% endif %}>{{ dia }}</option>
-            {% endfor %}
-        </select>
-        
-        </form>
+    <div class="calendario">
+        <div class="calendario-header">
+            <h2>{{ frase_fecha }}</h2>
+        </div>
+        <div class="calendario-grid">
+            <div class="calendario-dia-nombre">Lun</div>
+            <div class="calendario-dia-nombre">Mar</div>
+            <div class="calendario-dia-nombre">Mié</div>
+            <div class="calendario-dia-nombre">Jue</div>
+            <div class="calendario-dia-nombre">Vie</div>
+            <div class="calendario-dia-nombre">Sáb</div>
+            <div class="calendario-dia-nombre">Dom</div>
             
-        <p style="
-        margin-top: 0.5rem;
-        font-size: 1rem;
-        color: #4b5563;        /* gris profesional */
-        background-color: #e5e7eb; /* gris claro de fondo */
-        padding: 0.5rem 1rem;
-        border-radius: 8px;
-        display: inline-block;
-        font-weight: 500;
-    ">
-        📅 {{ frase_fecha }}
-    </p>
-    
+            {% for semana in calendario %}
+                {% for dia in semana %}
+                    {% if dia == 0 %}
+                        <div class="calendario-dia vacio"></div>
+                    {% else %}
+                        {% set fecha_actual = fecha_seleccionada.split('-') %}
+                        {% set fecha_dia = '%s-%02d-%02d'|format(fecha_actual[0], fecha_actual[1]|int, dia) %}
+                        <div class="calendario-dia {% if fecha_dia == fecha_seleccionada %}actual{% endif %}" 
+                             onclick="seleccionarFecha('{{ fecha_dia }}')">
+                            {{ dia }}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+        </div>
     </div>
 
     {% for sector in sectores %}
@@ -185,72 +235,74 @@
                 {% for box in boxes_por_sector[sector] %}
                 <div class="box-tarjeta {{ 'amarillo' if sector == 'Sector 1' else 'verde' if sector == 'Sector 2' else 'naranja' }}">
                     <div class="box-header">Box {{ box }}</div>
-<!-- Tabla de horarios -->
-<table class="horario-tabla">
-    {% for h in horarios %}
-        {% if h == '08:00' %}
+                    <table class="horario-tabla">
+                        {% for h in horarios %}
+                            {% if h == '08:00' %}
+                                <tr class="jornada"><td colspan="2">🌅 Jornada Mañana</td></tr>
+                            {% elif h == '14:00' %}
+                                <tr class="jornada"><td colspan="2">🌇 Jornada Tarde</td></tr>
+                            {% endif %}
 
-            <tr class="jornada"><td colspan="2">🌅 Jornada Mañana</td></tr>
-        {% elif h == '14:00' %}
-            <tr class="jornada"><td colspan="2">🌇 Jornada Tarde</td></tr>
-        {% endif %}
+                            {% if h == '13:00' %}
+                                <tr class="colacion"><td colspan="2">🕛 Colación (13:00 - 13:30)</td></tr>
+                            {% elif h != '13:30' %}
+                                <tr>
+                                    <td>{{ h }}</td>
+                                    <td>
+                                        {% if estado_boxes[sector][fecha_seleccionada][box][h] %}
+                                        <form method="post" action="/liberar" style="display:flex; align-items:center; gap:0.5rem;">
+                                            <input type="hidden" name="sector" value="{{ sector }}">
+                                            <input type="hidden" name="fecha" value="{{ fecha_seleccionada }}">
+                                            <input type="hidden" name="box" value="{{ box }}">
+                                            <input type="hidden" name="horario_inicio" value="{{ h }}">
+                                            <input type="hidden" name="horario_fin" value="{{ h }}">
+                                            <span style="flex:1;">{{ estado_boxes[sector][fecha_seleccionada][box][h] }}</span>
+                                            <button type="submit" title="Liberar este horario" style="
+                                                background-color: #ef4444;
+                                                color: white;
+                                                border: none;
+                                                border-radius: 6px;
+                                                padding: 2px 8px;
+                                                font-size: 0.75rem;
+                                                cursor: pointer;
+                                            ">✖️</button>
+                                        </form>
+                                        {% else %}
+                                            <span class="libre">Libre</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
+                    </table>
 
-        {% if h == '13:00' %}
-            <tr class="colacion"><td colspan="2">🕛 Colación (13:00 - 13:30)</td></tr>
-        {% elif h != '13:30' %}
-            <tr>
-                <td>{{ h }}</td>
-                    <td>
-                        {% if estado_boxes[sector][dia_seleccionado][box][h] %}
-                        <form method="post" action="/liberar" style="display:flex; align-items:center; gap:0.5rem;">
-                            <input type="hidden" name="sector" value="{{ sector }}">
-                            <input type="hidden" name="dia" value="{{ dia_seleccionado }}">
-                            <input type="hidden" name="box" value="{{ box }}">
-                            <input type="hidden" name="horario_inicio" value="{{ h }}">
-                            <input type="hidden" name="horario_fin" value="{{ h }}">
-                            <span style="flex:1;">{{ estado_boxes[sector][dia_seleccionado][box][h] }}</span>
-                            <button type="submit" title="Liberar este horario" style="
-                                background-color: #ef4444;
-                                color: white;
-                                border: none;
-                                border-radius: 6px;
-                                padding: 2px 8px;
-                                font-size: 0.75rem;
-                                cursor: pointer;
-                            ">✖️</button>
-                        </form>
-                    {% else %}
-                        <span class="libre">Libre</span>
-                    {% endif %}
-
-                    </td>
-            </tr>
-        {% endif %}
-
-    {% endfor %}
-</table>
-
-<!-- Botones desplegables -->
                     <div class="accordion">
                         <button onclick="togglePanel('asignar-{{ sector }}-{{ box }}')" style="
-    background-color: #2563eb;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-">
-    ➕ Asignar
-</button>
+                            background-color: #2563eb;
+                            color: white;
+                            border: none;
+                            border-radius: 8px;
+                            padding: 0.5rem 1rem;
+                            font-size: 0.9rem;
+                            font-weight: 600;
+                            cursor: pointer;
+                            transition: background-color 0.2s ease;
+                        ">
+                            ➕ Asignar
+                        </button>
                         <div class="panel" id="asignar-{{ sector }}-{{ box }}">
                             <form method="post">
                                 <input type="hidden" name="sector" value="{{ sector }}">
-                                <input type="hidden" name="dia" value="{{ dia_seleccionado }}">
+                                <input type="hidden" name="fecha" value="{{ fecha_seleccionada }}">
                                 <input type="hidden" name="box" value="{{ box }}">
+                                <select name="profesional" required>
+                                    <option value="">Seleccionar profesional</option>
+                                    {% for profesional in profesionales_por_sector[sector] %}
+                                        <option value="{{ profesional }}">{{ profesional }}</option>
+                                    {% endfor %}
+                                </select>
                                 <select name="horario_inicio" required>
+                                    <option value="">Horario inicio</option>
                                     {% for h in horarios %}
                                         {% if h != '13:00' and h != '13:30' %}
                                             <option value="{{ h }}">{{ h }}</option>
@@ -258,18 +310,21 @@
                                     {% endfor %}
                                 </select>
                                 <select name="horario_fin" required>
+                                    <option value="">Horario fin</option>
                                     {% for h in horarios %}
                                         {% if h != '13:00' and h != '13:30' %}
                                             <option value="{{ h }}">{{ h }}</option>
                                         {% endif %}
                                     {% endfor %}
                                 </select>
-                                <select name="profesional" required>
-                                    {% for profe in profesionales_por_sector[sector] %}
-                                        <option value="{{ profe }}">{{ profe }}</option>
-                                    {% endfor %}
-                                </select>
-                                <input type="submit" value="Asignar">
+                                <input type="submit" value="Asignar" style="
+                                    background-color: #2563eb;
+                                    color: white;
+                                    border: none;
+                                    border-radius: 6px;
+                                    padding: 0.5rem;
+                                    cursor: pointer;
+                                ">
                             </form>
                         </div>
                     </div>
