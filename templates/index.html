@@ -193,40 +193,42 @@
             window.location.href = `/?fecha=${fecha}`;
         }
     </script>
+    
+    <!-- Flatpickr (calendario liviano y profesional) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
 </head>
 
 <body>
     <h1>Gestión de Boxes - {{ mes_actual }} {{ año_actual }}</h1>
 
-    <div class="calendario">
-        <div class="calendario-header">
-            <h2>{{ frase_fecha }}</h2>
-        </div>
-        <div class="calendario-grid">
-            <div class="calendario-dia-nombre">Lun</div>
-            <div class="calendario-dia-nombre">Mar</div>
-            <div class="calendario-dia-nombre">Mié</div>
-            <div class="calendario-dia-nombre">Jue</div>
-            <div class="calendario-dia-nombre">Vie</div>
-            <div class="calendario-dia-nombre">Sáb</div>
-            <div class="calendario-dia-nombre">Dom</div>
-            
-            {% for semana in calendario %}
-                {% for dia in semana %}
-                    {% if dia == 0 %}
-                        <div class="calendario-dia vacio"></div>
-                    {% else %}
-                        {% set fecha_actual = fecha_seleccionada.split('-') %}
-                        {% set fecha_dia = '%s-%02d-%02d'|format(fecha_actual[0], fecha_actual[1]|int, dia) %}
-                        <div class="calendario-dia {% if fecha_dia == fecha_seleccionada %}actual{% endif %}" 
-                             onclick="seleccionarFecha('{{ fecha_dia }}')">
-                            {{ dia }}
-                        </div>
-                    {% endif %}
-                {% endfor %}
-            {% endfor %}
-        </div>
-    </div>
+    <div class="selector-dia">
+    <input type="text" id="selectorFecha" placeholder="Selecciona una fecha" style="
+        padding: 0.5rem 1rem;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 500;
+        color: #374151;
+        background-color: #f9fafb;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    ">
+    <p style="margin-top: 0.5rem; font-size: 1rem; color: #4b5563; background-color: #e5e7eb;
+              padding: 0.5rem 1rem; border-radius: 8px; display: inline-block; font-weight: 500;">
+        📅 {{ frase_fecha }}
+    </p>
+</div>
+
+<script>
+    flatpickr("#selectorFecha", {
+        dateFormat: "Y-m-d",
+        defaultDate: "{{ fecha_seleccionada }}",
+        onChange: function(selectedDates, dateStr, instance) {
+            window.location.href = "/?fecha=" + dateStr;
+        }
+    });
+</script>
 
     {% for sector in sectores %}
         <div class="sector">
