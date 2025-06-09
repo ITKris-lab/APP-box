@@ -37,15 +37,14 @@ while hora_actual <= hora_fin:
 def obtener_estado_boxes(fecha):
     """Consulta Supabase y devuelve un diccionario estado_boxes estructurado por sector > fecha > box > horario."""
     data = supabase.table("asignaciones").select("*").execute().data
-    estado = {
-        s: {
-            fecha.strftime("%Y-%m-%d"): {
-                box: {h: "" for h in horarios}
-                for box in boxes_por_sector[s]
-            }
-            for s in sectores
+estado = {
+    s: {
+        fecha.strftime("%Y-%m-%d"): {
+            box: {h: "" for h in horarios}
+            for box in boxes_por_sector[s]
         }
-    }
+    } for s in sectores
+}
 
     for fila in data:
         sector = fila["sector"]
