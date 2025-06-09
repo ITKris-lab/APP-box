@@ -8,14 +8,12 @@ app = Flask(__name__)
 # 🔹 Definir sectores y horarios
 sectores = ["Sector 1", "Sector 2", "Sector 3"]
 
-# 🔹 Boxes por sector
 boxes_por_sector = {
     "Sector 1": [6, 8, 10, 12],
     "Sector 2": [7, 8, 9, 10, 11, 13],
     "Sector 3": [6, 7, 9, 11, 12],
 }
 
-# 🔹 Profesionales por sector
 profesionales_por_sector = {
     sector: [
         "Dr. Carlos Molina M.", "Dra Carola Arce", "Dr. Ignacio Valdez", "Dr. Efrén Gutierrez", "Dra. Isabel Chirino",
@@ -26,7 +24,6 @@ profesionales_por_sector = {
     ] for sector in sectores
 }
 
-# 🔹 Generar lista de horarios
 horarios = []
 hora_actual = datetime.strptime("08:00", "%H:%M")
 hora_fin = datetime.strptime("17:00", "%H:%M")
@@ -34,17 +31,19 @@ while hora_actual <= hora_fin:
     horarios.append(hora_actual.strftime("%H:%M"))
     hora_actual += timedelta(minutes=30)
 
+
 def obtener_estado_boxes(fecha):
-    """Consulta Supabase y devuelve un diccionario estado_boxes estructurado por sector > fecha > box > horario."""
+    """Consulta Supabase y devuelve un estado de boxes estructurado por sector > fecha > box > horario"""
     data = supabase.table("asignaciones").select("*").execute().data
-estado = {
-    s: {
-        fecha.strftime("%Y-%m-%d"): {
-            box: {h: "" for h in horarios}
-            for box in boxes_por_sector[s]
+    estado = {}
+
+    for sector in sectores:
+        estado[sector] = {
+            fecha.strftime("%Y-%m-%d"): {
+                box: {h: "" for h in horarios}
+                for box in boxes_por_sector[sector]
+            }
         }
-    } for s in sectores
-}
 
     for fila in data:
         sector = fila["sector"]
@@ -58,10 +57,10 @@ estado = {
 
     return estado
 
+
 def obtener_calendario_mes(fecha):
-    """Genera el calendario del mes para la fecha dada."""
-    cal = calendar.monthcalendar(fecha.year, fecha.month)
-    return cal
+    return calendar.monthcalendar(fecha.year, fecha.month)
+
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -69,7 +68,6 @@ def index():
     mes_actual = ahora.strftime("%B")
     año_actual = ahora.year
 
-    # Obtener la fecha seleccionada o usar la fecha actual
     fecha_str = request.args.get("fecha")
     if fecha_str:
         try:
@@ -87,20 +85,19 @@ def index():
         horario_fin = request.form.get("horario_fin")
         profesional = request.form.get("profesional")
 
-        if not (sector and fecha and box and horario_inicio and horario_fin and profesional):
+        if not all([sector, fecha, box, horario_inicio, horario_fin, profesional]):
             return "Faltan datos en el formulario"
-        
+
         try:
             box = int(box)
         except ValueError:
-            return "Error: Box inválido"
+            return "Box inválido"
 
         if box not in boxes_por_sector.get(sector, []):
-            return "Error: Box no pertenece a este sector"
+            return "Box no válido para este sector"
 
         horarios_disponibles = [h for h in horarios if horario_inicio <= h <= horario_fin]
 
-        # 🔹 Eliminar asignaciones anteriores en ese rango
         for h in horarios_disponibles:
             supabase.table("asignaciones").delete().match({
                 "sector": sector,
@@ -120,8 +117,6 @@ def index():
 
     estado_boxes = obtener_estado_boxes(fecha_seleccionada)
     calendario = obtener_calendario_mes(fecha_seleccionada)
-    
-    # Formatear la fecha para mostrar
     frase_fecha = fecha_seleccionada.strftime("%A %d de %B de %Y").capitalize()
 
     return render_template(
@@ -138,6 +133,7 @@ def index():
         calendario=calendario,
     )
 
+
 @app.route("/liberar", methods=["POST"])
 def liberar_box():
     sector = request.form.get("sector")
@@ -146,16 +142,16 @@ def liberar_box():
     horario_inicio = request.form.get("horario_inicio")
     horario_fin = request.form.get("horario_fin")
 
-    if not (sector and fecha and box and horario_inicio and horario_fin):
+    if not all([sector, fecha, box, horario_inicio, horario_fin]):
         return "Faltan datos en el formulario"
 
     try:
         box = int(box)
     except ValueError:
-        return "Error: Box inválido"
+        return "Box inválido"
 
     if box not in boxes_por_sector.get(sector, []):
-        return "Error: Box no pertenece a este sector"
+        return "Box no válido para este sector"
 
     horarios_disponibles = [h for h in horarios if horario_inicio <= h <= horario_fin]
 
@@ -168,6 +164,7 @@ def liberar_box():
         }).execute()
 
     return redirect(f"/?fecha={fecha}")
+
 
 if __name__ == "__main__":
     app.run(host="10.68.118.135", port=3000, debug=True)
