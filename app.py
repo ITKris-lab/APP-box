@@ -2,6 +2,10 @@ from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect
 from supabase_client import supabase
 import calendar
+import os
+# 🔹 DEBUG para revisar si Render recibe las variables
+print("DEBUG: SUPABASE_URL:", os.getenv("SUPABASE_URL"))
+print("DEBUG: SUPABASE_KEY present?", bool(os.getenv("SUPABASE_KEY")))
 
 app = Flask(__name__)
 
